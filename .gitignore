@@ -1,0 +1,7 @@
+.DS_Store
+*.html
+molten-matter
+posts
+blog
+*.old.*
+config.scm

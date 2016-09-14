@@ -1,0 +1,141 @@
+* {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+body {
+  font: 1.2rem Vollkorn, serif;
+  text-align: center;
+
+  color: #333;
+  background-color: #E1DDD1;
+}
+
+a {
+  text-decoration: none;
+
+  color: #BB5757;
+}
+
+body>header {
+  font-size: 4rem;
+  font-weight: 500;
+  padding: 30px;
+
+  border-bottom: 20px solid #BB5757;
+  color: #E1DDD1;
+  background-color: #333;
+}
+
+body>header a {
+  color: inherit;
+}
+
+body>footer {
+  font-family: "TeX Gyre Cursor", monospace;
+  padding: 0 20px 20px;
+}
+
+main>.index,
+article>time,
+article>.body p,
+article>footer {
+  margin: 20px auto;
+  padding: 0 50px;
+  display: block;
+  max-width: 800px
+}
+
+/* Index */
+.index {
+  font: 1.5rem "TeX Gyre Cursor", monospace;
+  text-align: left;
+}
+
+/* Article */
+article>header {
+  font-family: "TeX Gyre Cursor", monospace;
+  font-size: 2.5rem;
+}
+
+article>header>p {
+  margin: auto;
+  max-width: 900px;
+  padding: 50px;
+  text-align: left;
+}
+
+article>time {
+  font-family: "TeX Gyre Cursor", monospace;
+}
+
+.body {
+  font-size: 1.5rem;
+}
+
+.body p {
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  -moz-font-smoothing: antialiased;
+
+  text-align: justify;
+  line-height: 2rem;
+  word-wrap: break-word;
+}
+
+.body code {
+  border-radius: 5px;
+  padding: 0 4px;
+  font: .7em "Courier", monospace;
+
+  background-color: white;
+  border-bottom: 2px solid white;
+}
+
+.body a {
+  color: inherit;
+  box-shadow: inset 0 -9px #DDFFC4;
+  border-bottom: 2px solid #DDFFC4;
+}
+
+.body a:hover {
+  box-shadow: unset;
+
+  background-color: #DDFFC4;
+}
+
+.body hr {
+  margin: 10px 0;
+}
+
+.body hr:after {
+  font-size: 2rem;
+  content: '§';
+}
+
+.body img {
+  max-width: 100vw;
+  height: auto;
+}
+
+article>footer {
+  font-size: 3rem;
+}
+
+@media screen and (max-width: 520px) {
+  body {
+    max-width: 100vw;
+  }
+
+  article>header p {
+    font-size: 2rem;
+    padding: 20px;
+  }
+
+  .body p {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+}
