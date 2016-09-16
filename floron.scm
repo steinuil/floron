@@ -23,12 +23,14 @@
 (define (atom? x)
   (not (or (pair? x) (null? x) (vector? x))))
 
-(define (fetch key table)
-  (cond ((null? table)
-         (error (string-append "Key not found: "
-                               (symbol->string key))))
-        ((eq? (caar table) key) (cadar table))
-        (else (fetch key (cdr table)))))
+(define key car)
+(define value cadr)
+
+(define (fetch k table)
+  (cond ((null? table); '())
+         (error (string-append "Key not found: " (symbol->string k))))
+        ((eq? (key (car table)) k) (value (car table)))
+        (else (fetch k (cdr table)))))
 
 (define (replace old new ls)
   (cond ((null? ls) '())
@@ -38,14 +40,11 @@
          (cons (replace old new (car ls))
                (replace old new (cdr ls))))))
 
-(define (multireplace old new ls)
-  (cond ((and (null? (cdr old)) (null? (cdr new)))
-         (replace (car old) (car new) ls))
-        ((or (null? (cdr old)) (null? (cdr new)))
-         (error "Unequal length lists given"))
-        (else
-          (replace (car old) (car new)
-                   (multireplace (cdr old) (cdr new) ls)))))
+(define (multireplace table ls)
+  (if (null? table) ls
+    (multireplace (cdr table)
+      (let ((entry (car table)))
+        (replace (key entry) (value entry) ls)))))
 
 ;; Post helpers
 (define-record-type <post>
@@ -61,15 +60,16 @@
     (if (= 1 (string-length str))
       (string-append "0" str) str)))
 
-(define (time->ymd time-t)
-  (string-append
-    (number->string (+ 2000 (- (time-year time-t) 100))) "/" ; wtf, chibi
-    (padded (time-month time-t)) "/"
-    (padded (time-day time-t))))
+(define (seconds->ymd seconds)
+  (let ((time-t (seconds->time seconds)))
+    (string-append
+      (number->string (+ 2000 (- (time-year time-t) 100))) "/" ; wtf, chibi
+      (padded (time-month time-t)) "/"
+      (padded (time-day time-t)))))
 
 (define (make-post post)
   (let ((title (fetch 'title post))
-        (date  (time->ymd (seconds->time (fetch 'date post))))
+        (date  (seconds->ymd (fetch 'date post)))
         (id    (fetch 'id post)))
     (make-post-info title date id
       (call-with-input-file
@@ -80,8 +80,8 @@
 (define-record-type <blog>
   (make-blog-info title author)
   blog?
-  (title    blog-title)
-  (author   blog-author))
+  (title  blog-title)
+  (author blog-author))
 
 (define (make-blog config)
   (let ((title  (fetch 'title config))
@@ -106,46 +106,41 @@
                    (fetch 'out-dir config)))))
 
 ;; Interesting stuff
+(define (render page bindings)
+  (multireplace bindings (read-file page)))
+
+(define (page-title page root)
+  (string-append page " | " root))
+
+(define (make-link file)
+  (string-append "/" file))
+
 (define (render-post post)
-  (let ((body   (post-body post))
-        (date   (post-date post))
-        (title  (post-title post))
-        (layout (read-file "templates/post.scm")))
-    (multireplace
-      '(post-title post-date post-body)
-      (list title date body)
-      layout)))
+  (render "templates/post.scm"
+    `((post-body  ,(post-body post))
+      (post-date  ,(post-date post))
+      (post-title ,(post-title post)))))
 
 (define (render-post-page blog post)
-  (let ((ptitle (string-append (post-title post) " | " (blog-title blog)))
-        (title  (blog-title blog))
-        (author (blog-author blog))
-        (post   (render-post post))
-        (layout (read-file "templates/layout.scm")))
-    (multireplace
-      '(blog-title page-title blog-author blog-content)
-      (list title ptitle author post)
-      layout)))
+  (render "templates/layout.scm"
+    `((page-title   ,(page-title (post-title post) (blog-title blog)))
+      (blog-title   ,(blog-title blog))
+      (blog-author  ,(blog-author blog))
+      (blog-content ,(render-post post)))))
+
+(define (render-index-item post)
+  (render "templates/index.scm"
+    `((post-title ,(fetch 'title post))
+      (post-date  ,(seconds->ymd (fetch 'date post)))
+      (post-desc  ,(fetch 'description post))
+      (post-link  ,(make-link (fetch 'id post))))))
 
 (define (render-index blog posts)
-  (let ((ptitle (string-append "Index | " (blog-title blog)))
-        (title  (blog-title blog))
-        (author (blog-author blog))
-        (layout (read-file "templates/index.scm")))
-
-    (define (render-index-item post)
-      (let ((title (fetch 'title post))
-            (date  (time->ymd (seconds->time (fetch 'date post))))
-            (link  (string-append "/" (fetch 'id post))))
-        (multireplace '(post-title post-date post-link)
-                      (list title date link)
-                      layout)))
-
-    (let ((posts (map render-index-item posts))
-          (layout (read-file "templates/layout.scm")))
-      (multireplace '(blog-title page-title blog-author blog-content)
-                    (list title ptitle author posts)
-                    layout))))
+  (render "templates/layout.scm"
+    `((page-title   ,(page-title "Index" (blog-title blog)))
+      (blog-title   ,(blog-title blog))
+      (blog-author  ,(blog-author blog))
+      (blog-content ,(map render-index-item posts)))))
 
 ;; Start
 (define config (load-config))
