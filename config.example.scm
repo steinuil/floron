@@ -7,5 +7,6 @@
    (
     ((title "Hello world")
      (date 1473817212)
+     (description "Hi there")
      (id "hello"))
     )))
